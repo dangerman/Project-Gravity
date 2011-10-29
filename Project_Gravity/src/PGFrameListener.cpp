@@ -66,6 +66,23 @@ PGFrameListener::PGFrameListener (
 	// Create the day/night system
 	createCaelumSystem();
 	mCaelumSystem->getSun()->setSpecularMultiplier(Ogre::ColourValue(0.3, 0.3, 0.3));
+
+	//Create collision box for player
+	playerBoxShape = new OgreBulletCollisions::BoxCollisionShape(Ogre::Vector3(40.0f, 50.0f, 30.0f));
+	playerBody = new OgreBulletDynamics::RigidBody("playerBoxRigid", mWorld);
+
+	playerBody->setShape(	mSceneMgr->getSceneNode("PlayerNode"),
+ 				playerBoxShape,
+ 				0.6f,			// dynamic body restitution
+ 				0.8f,			// dynamic body friction
+ 				10.0f, 			// dynamic bodymass
+				(mCamera->getDerivedPosition() + mCamera->getDerivedDirection().normalisedCopy() * 10),	// starting position
+				Quaternion(0,0,0,-1));// orientation
+	//Prevents the box from 'falling asleep'
+	playerBody->getBulletRigidBody()->setSleepingThresholds(0.0, 0.0);
+	// push the created objects to the dequeue
+ 	mShapes.push_back(playerBoxShape);
+ 	mBodies.push_back(playerBody);
 }
 
 PGFrameListener::~PGFrameListener()
@@ -362,6 +379,7 @@ bool PGFrameListener::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	// Ensures the sun is not too reflective on the island
 	//mCaelumSystem->getSun()->setSpecularMultiplier(Ogre::ColourValue(0.3, 0.3, 0.3));
 
+	/* - Not necessary unless using free camera
 	// Setup the scene query
     Ogre::Vector3 camPos = mCamera->getPosition();
     Ogre::Ray cameraRay(Ogre::Vector3(camPos.x, 5000.0f, camPos.z), Ogre::Vector3::NEGATIVE_UNIT_Y);
@@ -371,14 +389,18 @@ bool PGFrameListener::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	Ogre::RaySceneQueryResult &result = mRaySceneQuery->execute();
 	Ogre::RaySceneQueryResult::iterator itr = result.begin();
 
+
 	// Get the results, set the camera height
     if (itr != result.end() && itr->worldFragment)
     {
 		Ogre::Real terrainHeight = itr->worldFragment->singleIntersection.y;
         if ((terrainHeight + 10.0f) > camPos.y)
 			mCamera->setPosition( camPos.x, terrainHeight + 10.0f, camPos.z );
-    }
+    }*/
 	
+	//Keep player upright
+	playerBody->getBulletRigidBody()->setAngularFactor(0.0);
+
 	// Move the robot
 	if (mDirection == Ogre::Vector3::ZERO) 
     {
@@ -530,6 +552,7 @@ void PGFrameListener::windowClosed(Ogre::RenderWindow* rw)
 
 void PGFrameListener::moveCamera(Ogre::Real timeSinceLastFrame)
 {
+	/* This comment block is for free camera movement
 	// build our acceleration vector based on keyboard input composite
 	Ogre::Vector3 accel = Ogre::Vector3::ZERO;
 	if (mGoingForward) accel += mCamera->getDirection();
@@ -560,7 +583,34 @@ void PGFrameListener::moveCamera(Ogre::Real timeSinceLastFrame)
 	else if (mVelocity.squaredLength() < tooSmall * tooSmall)
 		mVelocity = Ogre::Vector3::ZERO;
 
-	if (mVelocity != Ogre::Vector3::ZERO) mCamera->move(mVelocity * timeSinceLastFrame);
+	if (mVelocity != Ogre::Vector3::ZERO) mCamera->move(mVelocity * timeSinceLastFrame);*/
+	
+	//change 0.5 to change deceleration when direction button isn't pressed
+	linVelX = 0.5 * playerBody->getLinearVelocity().x;
+	linVelY = playerBody->getLinearVelocity().y;
+	linVelZ = 0.5 * playerBody->getLinearVelocity().z;
+
+	if (mGoingForward)
+	{
+		linVelX += Ogre::Math::Sin(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI)) * 30;
+		linVelZ += Ogre::Math::Cos(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI)) * 30;
+	}
+	if(mGoingBack)
+	{
+		linVelX -= Ogre::Math::Sin(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI)) * 30;
+		linVelZ -= Ogre::Math::Cos(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI)) * 30;
+	}
+	if (mGoingLeft)
+	{
+		linVelX += Ogre::Math::Sin(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI) + Ogre::Radian(Ogre::Math::PI / 2)) * 30;
+		linVelZ += Ogre::Math::Cos(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI) + Ogre::Radian(Ogre::Math::PI / 2)) * 30;
+	}
+	if (mGoingRight)
+	{
+		linVelX -= Ogre::Math::Sin(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI) + Ogre::Radian(Ogre::Math::PI / 2)) * 30;
+		linVelZ -= Ogre::Math::Cos(mCamera->getDerivedOrientation().getYaw() + Ogre::Radian(Ogre::Math::PI) + Ogre::Radian(Ogre::Math::PI / 2)) * 30;
+	}
+	playerBody->getBulletRigidBody()->setLinearVelocity(btVector3(linVelX, linVelY, linVelZ));
 }
 
 void PGFrameListener::showDebugOverlay(bool show)
@@ -732,10 +782,10 @@ void PGFrameListener::createBulletTerrain(void)
 	
  	// Add Debug info display tool - creates a wire frame for the bullet objects
 	debugDrawer = new OgreBulletCollisions::DebugDrawer();
-	debugDrawer->setDrawWireframe(false);	// we want to see the Bullet containers
+	debugDrawer->setDrawWireframe(true);	// we want to see the Bullet containers
 	mWorld->setDebugDrawer(debugDrawer);
-	mWorld->setShowDebugShapes(false);	// enable it if you want to see the Bullet containers
-	showDebugOverlay(false);
+	mWorld->setShowDebugShapes(true);	// enable it if you want to see the Bullet containers
+	showDebugOverlay(true);
 	SceneNode *node = mSceneMgr->getRootSceneNode()->createChildSceneNode("debugDrawer", Ogre::Vector3::ZERO);
 	node->attachObject(static_cast <SimpleRenderable *> (debugDrawer));
 }

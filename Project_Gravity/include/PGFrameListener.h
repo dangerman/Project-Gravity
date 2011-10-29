@@ -95,6 +95,14 @@ private:
 	std::deque<OgreBulletCollisions::CollisionShape *>  mShapes;
 	OgreBulletCollisions::HeightmapCollisionShape *mTerrainShape;
 
+	//Player collision box
+	OgreBulletCollisions::BoxCollisionShape *playerBoxShape;
+	OgreBulletDynamics::RigidBody *playerBody;
+	//Player velocity
+	btScalar linVelX;
+	btScalar linVelY;
+	btScalar linVelZ;
+
 public:
     PGFrameListener(
   		SceneManager *sceneMgr, 

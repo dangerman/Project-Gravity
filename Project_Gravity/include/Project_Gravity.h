@@ -34,6 +34,7 @@ private:
     Ogre::RenderWindow* mWindow;
     Ogre::String mResourcesCfg;
     Ogre::String mPluginsCfg;
+	Ogre::SceneNode* playerNode;
 
     // OgreBites
     OgreBites::SdkCameraMan* mCameraMan;     // basic camera controller
