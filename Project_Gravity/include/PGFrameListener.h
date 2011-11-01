@@ -96,7 +96,7 @@ private:
 	OgreBulletCollisions::HeightmapCollisionShape *mTerrainShape;
 
 	//Player collision box
-	OgreBulletCollisions::BoxCollisionShape *playerBoxShape;
+	OgreBulletCollisions::CapsuleCollisionShape *playerBoxShape;
 	OgreBulletDynamics::RigidBody *playerBody;
 	//Player velocity
 	btScalar linVelX;

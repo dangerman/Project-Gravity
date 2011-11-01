@@ -24,12 +24,17 @@ void Project_Gravity::createCamera(void)
 	mCamera = mSceneMgr->createCamera("PlayerCam");
 	mCamera->setNearClipDistance(5);
     mCamera->setFarClipDistance(99999*6);
-	mCamera->setPosition(Ogre::Vector3(528, 155, 2960));
+	mCamera->setPosition(Ogre::Vector3(0, 0, 0));
 
 	// Set camera look point
     mCamera->lookAt(Vector3(0,0,-300));
 	mCamera->setDirection(Ogre::Vector3(0.333, 0.071, -0.953));
     mCamera->setNearClipDistance(5);
+
+	//Create child node for the player
+	playerNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("PlayerNode");
+	playerNode->attachObject(mCamera);
+	playerNode->setPosition(1700, 500, 1100);
 }
 
 bool Project_Gravity::configure(void)

@@ -68,7 +68,7 @@ PGFrameListener::PGFrameListener (
 	mCaelumSystem->getSun()->setSpecularMultiplier(Ogre::ColourValue(0.3, 0.3, 0.3));
 
 	//Create collision box for player
-	playerBoxShape = new OgreBulletCollisions::BoxCollisionShape(Ogre::Vector3(40.0f, 50.0f, 30.0f));
+	playerBoxShape = new OgreBulletCollisions::CapsuleCollisionShape(10, 40, Vector3::UNIT_Y);
 	playerBody = new OgreBulletDynamics::RigidBody("playerBoxRigid", mWorld);
 
 	playerBody->setShape(	mSceneMgr->getSceneNode("PlayerNode"),
@@ -77,7 +77,7 @@ PGFrameListener::PGFrameListener (
  				0.8f,			// dynamic body friction
  				10.0f, 			// dynamic bodymass
 				(mCamera->getDerivedPosition() + mCamera->getDerivedDirection().normalisedCopy() * 10),	// starting position
-				Quaternion(0,0,0,-1));// orientation
+				Quaternion(1,0,0,0));// orientation
 	//Prevents the box from 'falling asleep'
 	playerBody->getBulletRigidBody()->setSleepingThresholds(0.0, 0.0);
 	// push the created objects to the dequeue

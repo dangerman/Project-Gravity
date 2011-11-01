@@ -6,6 +6,7 @@
 #include "Shapes/OgreBulletCollisionsStaticPlaneShape.h" // for static planes
 #include "Shapes/OgreBulletCollisionsBoxShape.h"		 // for Boxes
 #include "Shapes/OgreBulletCollisionsTerrainShape.h"	 // for the terrain
+#include "Shapes\OgreBulletCollisionsCapsuleShape.h"	// for player capsule
 
 #include <OgreCamera.h>
 #include <OgreEntity.h>
